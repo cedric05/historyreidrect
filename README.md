@@ -1,4 +1,4 @@
-create proxy input file and proxy output file for stdin/stdout softwares. This is used specifically for debuggin language servers
+MITM for command line io programs. specifically created for debugging language servers
 
 ## build
 `cargo build --release`
@@ -7,9 +7,10 @@ create proxy input file and proxy output file for stdin/stdout softwares. This i
 
 `RUN_COMMAND=/usr/bin/run.sh INPUT_FILE=/tmp/input OUTPUT_FILE=/tmp/output target/debug/bucket`
 
-check `/tmp/input` and `/tmp/output`
+input to program is captured in `/tmp/input`
+
+output to program is captured in `/tmp/output`
 
 ### FAQ
 1. if run.sh expects few command line args, create a new run2.sh with command args set
 2. if env `INPUT_FILE` and `OUTPUT_FILE` can't be set, create new run3.sh with env set in run3.sh 
-
