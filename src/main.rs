@@ -6,14 +6,13 @@ use tokio::io::stdin;
 use tokio::io::stdout;
 use tokio::io::AsyncReadExt;
 use tokio::io::AsyncWriteExt;
-use tokio::io::BufReader;
 use tokio::process::Command;
 
 macro_rules! copy {
     ($input:expr, $output:expr, $output2:expr) => {
         async {
+            let mut buf = [0; 4096];
             loop {
-                let mut buf = [0; 4096];
                 let count = $input.read(&mut buf).await?;
                 let res = tokio::join!(
                     $output.write_all(&buf[0..count]),
@@ -36,8 +35,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()?;
-    let mut child_stdout = BufReader::new(child.stdout.unwrap());
-    let mut child_stdin = child.stdin.unwrap();
+    let mut child_stdout = child.stdout.expect("impossible for this to happen");
+    let mut child_stdin = child.stdin.expect("impossible for this to happen");
 
     let mut open_options = OpenOptions::new();
     open_options.append(true).create(true);
@@ -45,11 +44,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut output_file = open_options.clone().open(output_file).await?;
     let mut input_file = open_options.open(input_file).await?;
 
-    let mut current_stdin = BufReader::new(stdin());
+    let mut current_stdin = stdin();
     let mut current_stdout = stdout();
 
     tokio::select! {
-        r = copy!(child_stdout, current_stdout, output_file)=> r,
         r = copy!(current_stdin, child_stdin, input_file)=> r,
+        r = copy!(child_stdout, current_stdout, output_file)=> r,
     }
 }
